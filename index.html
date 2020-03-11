@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css?family=Jua&display=swap&subset=korean" rel="stylesheet">
+
+</head>
+
+<body onload="init()">
+    <script class="jsbin" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+    <script>
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('.image-upload-wrap').hide();
+                    $('.file-upload-image').attr('src', e.target.result);
+                    $('.file-upload-content').show();
+                    //$('.image-title').html(input.files[0].name);
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                removeUpload();
+            }
+        }
+
+        function removeUpload() { // REMOVE 버튼 시 작동
+            $('.file-upload-input').replaceWith($('.file-upload-input').clone());
+            $('.file-upload-content').hide();
+            $('.image-upload-wrap').show();
+            $('.file-upload-image').attr("src","#");
+
+            labelContainer = document.getElementById("label-container");
+            info = document.getElementById('information');
+            labelContainer.style.display="none";
+            info.style.display="none";
+
+        }
+        $('.image-upload-wrap').bind('dragover', function() {
+            $('.image-upload-wrap').addClass('image-dropping');
+        });
+        $('.image-upload-wrap').bind('dragleave', function() {
+            $('.image-upload-wrap').removeClass('image-dropping');
+        });
+    </script>
+    <script type="text/javascript">
+        // More API functions here:
+        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "https://teachablemachine.withgoogle.com/models/75h2g9DV/";
+        let model, webcam, labelContainer, maxPredictions;
+        // Load the image model and setup the webcam
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+            // load the model and metadata
+            // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+            // or files from your local hard drive
+            // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+                labelContainer.appendChild(document.createElement("div"));
+            }
+            labelContainer.childNodes[1].appendChild(document.createElement("div"));
+            labelContainer.childNodes[3].appendChild(document.createElement("div"));
+            labelContainer.childNodes[5].appendChild(document.createElement("div"));
+
+            labelContainer.childNodes[1].classList.add("grp_back");
+            labelContainer.childNodes[3].classList.add("grp_back");
+            labelContainer.childNodes[5].classList.add("grp_back");
+
+        }
+        // run the webcam image through the image model
+        async function predict() {
+            // predict can take in an image, video or canvas html element
+            try {
+                var image=document.getElementById("face-image");
+                var prediction = await model.predict(image,false);
+            } catch (e) {
+                labelContainer.style.display="none";
+                alert('사진을 넣어 주세요');
+                return;
+            }
+        //    const prediction = await model.predict(image,false);
+            labelContainer.style.display="block";
+            var j=0;
+            for (let i = 0; i <  maxPredictions;i++) {
+                const classPrediction =
+                    prediction[i].className;
+                    labelContainer.childNodes[j].innerHTML = classPrediction;
+                    j=j+2;
+
+            }
+            var kim=(prediction[0].probability.toFixed(2))*100;
+            var jo=(prediction[1].probability.toFixed(2))*100;
+            var choi=(prediction[2].probability.toFixed(2))*100;
+
+            kim = kim.toFixed(1);
+            jo = jo.toFixed(1);
+            choi = choi.toFixed(1);
+
+            izone1(kim,jo,choi); // 검사했을때 나오는 문구 함수
+
+            info = document.getElementById('information');
+            info.style.display="block";
+
+            izone2(kim,jo,choi); // 퍼센트 게이지 함수
+
+
+        }
+
+        function izone1(kim,jo,choi){ // 검사했을때 나오는 문구
+            this.kim=kim;
+            this.jo=jo;
+            this.choi=choi;
+
+            var izone_k=document.getElementsByClassName("izone-kim")[0];
+            var izone_j=document.getElementsByClassName("izone-jo")[0];
+            var izone_c=document.getElementsByClassName("izone-choi")[0];
+
+            if(kim>jo){
+                if(kim>choi){ //김채원
+                    izone_k.style.display="block";
+                    izone_j.style.display="none";
+                    izone_c.style.display="none";
+                }
+                else if(kim<choi){ // 촤예나
+                    izone_k.style.display="none";
+                    izone_j.style.display="none";
+                    izone_c.style.display="block";
+
+                }
+                else{ // 김채원 == 최예나
+                    izone_k.style.display="block";
+                    izone_j.style.display="none";
+                    izone_c.style.display="block";
+                }
+            }
+            else if(kim<jo){
+                if(jo>choi){ // 조유리
+                    izone_k.style.display="none";
+                    izone_j.style.display="block";
+                    izone_c.style.display="none";
+                }
+                else if(jo<choi){ // 최예나
+                    izone_k.style.display="none";
+                    izone_j.style.display="none";
+                    izone_c.style.display="block";
+                }
+                else{ // 조유리 == 최예나
+                    izone_k.style.display="none";
+                    izone_j.style.display="block";
+                    izone_c.style.display="block";
+                }
+
+            }
+            else{
+                if(kim>choi){ // 김채원 == 조유리
+                    izone_k.style.display="block";
+                    izone_j.style.display="block";
+                    izone_c.style.display="none";
+                }
+                else if(kim<choi){ // 최예나
+                    izone_k.style.display="none";
+                    izone_j.style.display="none";
+                    izone_c.style.display="block";
+                }
+                else{ // 김채원 == 조유리 == 최예나
+                    izone_k.style.display="block";
+                    izone_j.style.display="block";
+                    izone_c.style.display="block";
+                }
+
+            }
+
+        }
+        function izone2(kim,jo,choi){ // 퍼센트 게이지 함수
+            // labelContainer.appendChild(document.createElement("div"));
+
+            var izone_k = labelContainer.childNodes[1].childNodes[0];
+            var izone_j = labelContainer.childNodes[3].childNodes[0];
+            var izone_c = labelContainer.childNodes[5].childNodes[0];
+
+            izone_k.style.textAlign="center";
+            izone_j.style.textAlign="center";
+            izone_c.style.textAlign="center";
+
+            izone_k.innerHTML=kim+"%";
+            izone_j.innerHTML=jo+"%";
+            izone_c.innerHTML=choi+"%";
+
+            kim=(100-kim)+"%";
+            jo=(100-jo)+"%";
+            choi=(100-choi)+"%";
+
+            izone_k.style.backgroundColor="#cee5d5";  // 고유색
+            izone_j.style.backgroundColor="#f3aa51";
+            izone_c.style.backgroundColor="#fcf695";
+
+            izone_k.style.marginRight=kim;
+            izone_j.style.marginRight=jo;
+            izone_c.style.marginRight=choi;
+
+            izone_k.style.marginBottom="10px";
+            izone_j.style.marginBottom="10px";
+            izone_c.style.marginBottom="10px";
+
+            izone_k.style.borderRadius="4px";
+            izone_j.style.borderRadius="4px";
+            izone_c.style.borderRadius="4px";
+
+        }
+
+    </script>
+    <div id="main" class="tracking-in-expand-fwd-bottom">
+        <div class="mainlogo">
+            <img src="izone.png" alt="" id="logo">
+            <h1 id="logotext">조유리즈 구별하기</h1>
+        </div>
+    <!--    <button type="button" onclick="init()">Start</button> -->
+
+
+        <div class="file-upload">
+            <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">Add Image</button>
+
+            <div class="image-upload-wrap">
+                <input class="file-upload-input" type='file' onchange="readURL(this);" accept="image/*" />
+                <div class="drag-text">
+                    <h3>여기에 사진을 올려주세요 드래그해서 올리기 가능!</h3>
+                </div>
+            </div>
+            <div class="file-upload-content">
+                <img class="file-upload-image" id="face-image"src="#" alt="your image" />
+                <div class="image-title-wrap">
+                    <button type="button" onclick="removeUpload()" class="remove-image">REMOVE
+                    <!--    <span class="image-title">Uploaded Image</span> -->
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="abc">
+            <button id="button" type="button" onclick="predict()">시작!</button>
+        </div>
+        <div id="label-container"></div>
+    </div>
+
+<div id="information">
+    <div class="izone-kim">
+        <p>김채원</p>
+        <div class="info-image">
+            <img src="1kim.jpg" alt="">
+        </div>
+    </div>
+    <div class="izone-jo">
+        <p>조유리</p>
+        <div class="info-image">
+            <img src="2jo.jpg" alt="">
+        </div>
+    </div>
+    <div class="izone-choi">
+        <p>최예나</p>
+        <div class="info-image">
+            <img src="3choi.jpg" alt="">
+        </div>
+    </div>
+</div>
+
+</body>
+<!--
+    Copyright (c) 2020 by Aaron Vanston (https://codepen.io/aaronvanston/pen/yNYOXR)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+    -->
+
+</html>
