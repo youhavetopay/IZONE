@@ -110,6 +110,7 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         <script type="text/javascript">
             function intro() {
+                document.getElementById("intro").play();
                 setTimeout(function() { // 인트로 재생후 메인화면 보이기
                     var vid = document.getElementById('intro');
                     var main = document.getElementById("main");
@@ -140,7 +141,7 @@
         </script>
 
         <div id="intro">
-            <video src="[VAP]intro.mp4" autoplay poster="posterimage.jpg" width="75%" height="75%" controls></video>
+            <video src="[VAP]intro.mp4" autoplay poster="posterimage.jpg" width="75%" height="75%" controls muted="muted"></video>
         </div>
 
         <div id="main">
