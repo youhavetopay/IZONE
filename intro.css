@@ -1,0 +1,15 @@
+body{
+    background-color: black;
+}
+#im{
+    position: relative;
+    top:50%;
+    left: 40%;
+    width:30%;
+}
+.text{
+    position: relative;
+    top:50%;
+    left: 50%;
+    color:white;
+}
